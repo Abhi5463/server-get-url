@@ -6,18 +6,28 @@ dotenv.config();
 
 export const uploadImage = async (request, response) => {
     const fileObj = {
-        path: request.file.path,
-        name: request.file.originalname,
-    }
+      name: request.file.originalname,
+    };
     
     try {
-        const file = await File.create(fileObj);
-        response.status(200).json({ path: `http://localhost:${process.env.PORT}/file/${file._id}`});
+      const s3 = new AWS.S3();
+      const params = {
+        Bucket: 'cyclic-shiny-ruby-polo-shirt-ap-southeast-2',
+        Key: fileObj.name,
+        Body: request.file.buffer,
+      };
+      
+      await s3.upload(params).promise();
+      
+      // Create a new file record in your MongoDB collection if needed
+      // Update the response accordingly based on your application logic
+      response.status(200).json({ message: 'File uploaded successfully' });
     } catch (error) {
-        console.error(error.message);
-        response.status(500).json({ error: error.message });
+      console.error(error.message);
+      response.status(500).json({ error: error.message });
     }
-}
+  };
+  
 
 export const getImage = async (request, response) => {
     try {   
